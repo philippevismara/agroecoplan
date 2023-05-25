@@ -1,0 +1,14 @@
+# ignore all logs
+*.log
+# ignore all xml
+*.xml
+BROUILLON.py
+TMP_python.py
+TMP___AssolementculturesV7optim_noneg.py
+TD4GrouperCP.py
+test_local.py
+*.json
+*.class
+target
+!pom.xml
+.idea

@@ -1,0 +1,45 @@
+#V1 ;;;;;;;;;;;;;;;;;;
+###DATA nbPlanches=80;;;;;;;;;;;;;;;;;;
+culture;categorie;debut;fin;quantite;planches_interdites;famille;delai_retour;exigeante;salissante;prof_enracinement;besoin_lumiere;exigence_de_soins;surveillance;aspersion;besoins_goute_a_goute;période_culture_ete;periode_culture_hiver;sortie
+Ail;ail;144;164;2;11,12,13,14,15,16,17,18,19,20,28,29,30,38,39,40,41,42,43,44,45,46,47,48,49,50,58,59,60,68,69,70,71,72,73,74,75,76,77,78,79,80;aliacees;4;oui;oui;1;mi-ombre;;;;;été;hiver;8,9
+Aubergine;aubergine;122;147;1;16,17,18,19,20,28,29,30,38,39,40,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,76,77,78,79,80;solanacees;4;oui;non;2;soleil;oui;;;2;été;0;49
+Betterave;betterave;117;130;1;;chenopodiacees;2;non;oui;3;mi-ombre;;;;2;été;0;10
+Betterave;betterave;139;151;1;;chenopodiacees;2;non;oui;3;mi-ombre;;;;2;été;hiver;4
+Betterave;betterave;141;153;1;11,12,13,14,15,16,17,18,19,20,28,29,30,38,39,40,41,42,43,44,45,46,47,48,49,50,58,59,60,68,69,70,71,72,73,74,75,76,77,78,79,80;chenopodiacees;2;non;oui;3;mi-ombre;;;;2;été;hiver;6
+Brocoli;brocoli;137;147;1;;brassicacees;4;oui;non;3;mi-ombre;;;;1;été;0;26
+Brocoli;brocoli;137;144;1;;brassicacees;4;oui;non;3;mi-ombre;;;;1;été;0;27
+Brocoli;brocoli;137;158;1;11,12,13,14,15,16,17,18,19,20,28,29,30,38,39,40,41,42,43,44,45,46,47,48,49,50,58,59,60,68,69,70,71,72,73,74,75,76,77,78,79,80;brassicacees;4;oui;non;3;mi-ombre;;;;1;été;hiver;25
+Butternut;courges;125;141;2;16,17,18,19,20,28,29,30,38,39,40,46,47,48,49,50,58,59,60,68,69,70,76,77,78,79,80;cucurbitacees;4;oui;non;3;soleil;;;non;1;été;0;37,38
+Carotte;carotte;116;132;2;51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80;apiacees;2;non;oui;3;mi-ombre;oui;oui;oui;3;été;0;8,9
+Chou Cabus;choux;136;148;1;;brassicacees;4;oui;non;3;mi-ombre;;;;1;été;0;22
+Chou Cabus;choux;136;157;1;11,12,13,14,15,16,17,18,19,20,28,29,30,38,39,40,41,42,43,44,45,46,47,48,49,50,58,59,60,68,69,70,71,72,73,74,75,76,77,78,79,80;brassicacees;4;oui;non;3;mi-ombre;;;;1;été;hiver;21
+Chou de milan;choux;136;151;1;;brassicacees;4;oui;non;3;mi-ombre;;;;1;été;hiver;24
+chou frise;choux;117;152;1;;brassicacees;4;oui;non;3;mi-ombre;;;;1;été;hiver;2
+Chou Romanesco;choux;136;150;1;;brassicacees;4;oui;non;3;mi-ombre;;;;1;été;hiver;23
+Chou-fleur;choux;136;147;1;;brassicacees;4;oui;non;3;mi-ombre;;;;1;été;0;28
+Chou-fleur;choux;136;150;1;;brassicacees;4;oui;non;3;mi-ombre;;;;1;été;hiver;29
+Chou-fleur;choux;136;152;1;;brassicacees;4;oui;non;3;mi-ombre;;;;1;été;hiver;30
+Chou-rave;choux;139;146;2;51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70;brassicacees;2;non;oui;1;mi-ombre;oui;;oui;2;été;0;5,7
+Concombre;concombre;122;137;1;16,17,18,19,20,28,29,30,38,39,40,46,47,48,49,50,58,59,60,68,69,70,76,77,78,79,80;cucurbitacees;4;oui;non;2;soleil;;;non;3;été;0;3
+Courge;courges;123;141;6;16,17,18,19,20,28,29,30,38,39,40,46,47,48,49,50,58,59,60,68,69,70,76,77,78,79,80;cucurbitacees;4;oui;non;3;soleil;;;non;1;été;0;31,32,33,34,35,36
+Courgette;courgette;120;139;4;16,17,18,19,20,28,29,30,38,39,40,46,47,48,49,50,58,59,60,68,69,70,76,77,78,79,80;cucurbitacees;4;oui;non;2;soleil;;;;2;été;0;17,18,19,20
+Echalotte;oignon;115;128;1;51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70;aliacees;4;oui;oui;1;mi-ombre;oui;;;1;été;0;70
+Engrais vert ete ;engrais_vert;119;166;8;11,12,13,14,15,16,17,18,19,20,28,29,30,38,39,40,41,42,43,44,45,46,47,48,49,50,58,59,60,68,69,70,71,72,73,74,75,76,77,78,79,80;engrais_vert;8;non;non;3;ombre;;;;;été;hiver;71,72,73,74,75,76,77,78
+epinard;epinard;143;158;1;11,12,13,14,15,16,17,18,19,20,28,29,30,38,39,40,41,42,43,44,45,46,47,48,49,50,58,59,60,68,69,70,71,72,73,74,75,76,77,78,79,80;chenopodiacees;2;non;non;1;mi-ombre;;;;1;été;hiver;3
+Haricot;haricot;122;138;1;;fabacees;2;non;oui;2;mi-ombre;;;non;2;été;0;4
+Laitue;salade;114;127;1;51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70;asteracees;2;non;non;1;ombre;oui;;;2;été;0;5
+Laitue;salade;116;129;1;51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70;asteracees;2;non;non;1;ombre;oui;;;2;été;0;6
+Laitue;salade;140;152;1;51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70;asteracees;2;non;non;1;ombre;oui;;;2;été;hiver;68
+Laitue;salade;143;155;1;11,12,13,14,15,16,17,18,19,20,28,29,30,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80;asteracees;2;non;non;1;ombre;oui;;;2;été;hiver;67
+Melon;melon;119;135;4;16,17,18,19,20,28,29,30,38,39,40,46,47,48,49,50,58,59,60,68,69,70,76,77,78,79,80;cucurbitacees;4;oui;non;3;soleil;;;non;1;été;0;13,14,15,16
+Navet;navet;110;124;1;51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70;brassicacees;2;non;oui;2;mi-ombre;oui;;;2;été;0;63
+Navet;navet;136;151;2;51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70;brassicacees;2;non;oui;2;mi-ombre;oui;;;2;été;hiver;69,7
+Oignon;oignon;117;128;4;51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70;aliacees;4;oui;oui;1;mi-ombre;oui;;;1;été;0;66,67,68,69
+Pasteque;courges;119;135;2;16,17,18,19,20,28,29,30,38,39,40,46,47,48,49,50,58,59,60,68,69,70,76,77,78,79,80;cucurbitacees;4;oui;non;3;soleil;;;non;1;été;0;11,12
+Patate douce;autres;122;155;1;11,12,13,14,15,16,17,18,19,20,28,29,30,38,39,40,41,42,43,44,45,46,47,48,49,50,58,59,60,68,69,70,71,72,73,74,75,76,77,78,79,80;convolvulacees;4;oui;non;3;mi-ombre;;;;;été;hiver;1
+Poireau;poireau;129;164;5;11,12,13,14,15,16,17,18,19,20,28,29,30,38,39,40,41,42,43,44,45,46,47,48,49,50,58,59,60,68,69,70,71,72,73,74,75,76,77,78,79,80;aliacees;4;oui;oui;1;mi-ombre;;;;1;été;hiver;61,62,63,64,65
+Poivron;poivron;122;147;1;16,17,18,19,20,28,29,30,38,39,40,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,76,77,78,79,80;solanacees;4;oui;non;3;soleil;oui;;;1;été;0;50
+Pomme de terre;pomme_de_terre;115;133;4;;solanacees;4;oui;non;2;mi-ombre;;;non;1;été;0;41,42,43,44
+Potimarron;courges;125;141;2;16,17,18,19,20,28,29,30,38,39,40,46,47,48,49,50,58,59,60,68,69,70,76,77,78,79,80;cucurbitacees;4;oui;non;3;soleil;;;non;1;été;0;39,4
+Radis rave;radis;140;157;1;11,12,13,14,15,16,17,18,19,20,28,29,30,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80;brassicacees;2;oui;oui;1;ombre;oui;oui;;3;été;hiver;66
+Tomates cerise;tomates;122;147;1;16,17,18,19,20,28,29,30,38,39,40,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,76,77,78,79,80;solanacees;4;oui;non;3;soleil;oui;;;2;été;0;48
