@@ -1,8 +1,10 @@
 package org.agroecoplan;
 
 import org.chocosolver.solver.Model;
+import org.chocosolver.solver.Solution;
 import org.chocosolver.solver.constraints.Constraint;
 import org.chocosolver.solver.constraints.extension.Tuples;
+import org.chocosolver.solver.constraints.extension.hybrid.ISupportable;
 import org.chocosolver.solver.variables.BoolVar;
 import org.chocosolver.solver.variables.IntVar;
 import org.chocosolver.solver.variables.UndirectedGraphVar;
@@ -12,11 +14,14 @@ import org.chocosolver.util.objects.graphs.UndirectedGraph;
 import org.chocosolver.util.objects.setDataStructures.ISet;
 import org.chocosolver.util.objects.setDataStructures.SetFactory;
 import org.chocosolver.util.objects.setDataStructures.SetType;
+import org.chocosolver.solver.constraints.extension.hybrid.HybridTuples;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
+
+import static org.chocosolver.solver.constraints.extension.hybrid.HybridTuples.*;
 
 /**
  * Agro-ecological crop planning problem instance.
@@ -281,6 +286,110 @@ public class AgroEcoPlanProblem {
         //postInteractionCustomPropBased(positivePairs);
     }
 
+    public void postForbidNegativePrecedence() {
+        // 1. Construct the sequence of non-overlapping crops.
+        //     a. Sort all crops by descending order of crop beginning.
+        Integer[] sortedCrops = IntStream.range(0, data.NB_NEEDS).mapToObj(i -> i).toArray(Integer[]::new);
+        Arrays.sort(sortedCrops, (i, j) -> data.NEEDS_BEGIN[j] - data.NEEDS_BEGIN[i]);
+        //     b. for all crop, construct the non overlapping precedence sequence.
+        for (int i = 0; i < sortedCrops.length; i++) {
+            int cropA = sortedCrops[i];
+            int spA = data.NEEDS_SPECIES[cropA];
+            boolean startRegular = false;
+            for (int j = i + 1; j <sortedCrops.length; j++) {
+                int cropB = sortedCrops[j];
+                int spB = data.NEEDS_SPECIES[cropB];
+                // If cropB can precede cropA, then following sequences need a regular constraint
+                if (data.PRECEDENCES[spA][spB] >= 0) {
+                    startRegular = true;
+                } else if (!startRegular) {
+                    // If cropB cannot precede cropA and there is no option of intermediate preceding crop
+                    // (startRegular = false), then assignment[cropA] != assignment[cropB]
+                    model.arithm(assignment[cropA], "!=", assignment[cropB]).post();
+                } else {
+                    // Reconstruct the assignment sequence, backward from cropA to cropB (inclusive)
+                    IntVar[] seq = new IntVar[j - i + 1];
+                    for (int k = 0; k < j - i + 1; k++) {
+                        seq[k] = assignment[sortedCrops[k + i]];
+                    }
+                    // Post smart table constraint
+                    HybridTuples tuples = new HybridTuples();
+                    ISupportable[] t = new ISupportable[seq.length]; // a[cropA] != a[cropB]
+                    ISupportable[][] tt = new ISupportable[seq.length - 2][]; // a[cropA] != a[cropB] && one intermediary
+                    for (int l = 0; l < tt.length; l++) {
+                        tt[l] = new ISupportable[seq.length];
+                        tt[l][0] = any();
+                        tt[l][seq.length - 1] = eq(col(0), 0);
+                    }
+                    t[0] = any();
+                    t[seq.length - 1] = ne(col(0));
+                    for (int l = 1; l < seq.length - 1; l++) {
+                        t[l] = any();
+                        for (int m = 0; m < tt.length; m++) {
+                            if (m + 1 == l) {
+                                tt[m][l] = eq(col(0), 0);
+                            } else {
+                                tt[m][l] = any();
+                            }
+                        }
+                    }
+                    tuples.add(t);
+                    for (ISupportable[] a : tt) {
+                        tuples.add(a);
+                    }
+                    model.table(seq, tuples).post();
+                }
+            }
+        }
+    }
+
+    public IntVar getNumberOfPositivePrecedences() {
+        // 1. Construct the sequence of non-overlapping crops.
+        //     a. Sort all crops by descending order of crop beginning.
+        Integer[] sortedCrops = IntStream.range(0, data.NB_NEEDS).mapToObj(i -> i).toArray(Integer[]::new);
+        Arrays.sort(sortedCrops, (i, j) -> data.NEEDS_BEGIN[j] - data.NEEDS_BEGIN[i]);
+        ArrayList<BoolVar> boolVars = new ArrayList<>();
+        //     b. for all crop, construct the non overlapping precedence sequence.
+        for (int i = 0; i < sortedCrops.length; i++) {
+            int cropA = sortedCrops[i];
+            int spA = data.NEEDS_SPECIES[cropA];
+            for (int j = i + 1; j <sortedCrops.length; j++) {
+                int cropB = sortedCrops[j];
+                int spB = data.NEEDS_SPECIES[cropB];
+                // If cropB can precede cropA, then following sequences need a regular constraint
+                if (data.PRECEDENCES[spA][spB] == 1) {
+                    // Reconstruct the assignment sequence, backward from cropA to cropB (inclusive)
+                    IntVar[] seq = new IntVar[j - i + 1];
+                    for (int k = 0; k < j - i + 1; k++) {
+                        seq[k] = assignment[sortedCrops[k + i]];
+                    }
+                    if (seq.length == 2) {
+                        boolVars.add(model.arithm(seq[0], "=", seq[1]).reify());
+                    } else {
+                        // Post smart table constraint
+                        HybridTuples tuples = new HybridTuples();
+                        ISupportable[] t = new ISupportable[seq.length];
+                        t[0] = any();
+                        t[seq.length - 1] = eq(col(0), 0);
+                        for (int l = 1; l < seq.length - 1; l++) {
+                            t[l] = ne(col(0), 0);
+                        }
+                        tuples.add(t);
+                        boolVars.add(model.table(seq, tuples).reify());
+                    }
+                }
+            }
+        }
+        IntVar sum = model.intVar(0, boolVars.size());
+        BoolVar[] boolVarsA = new BoolVar[boolVars.size()];
+        for (int i = 0; i < boolVarsA.length; i++) {
+            boolVarsA[i] = boolVars.get(i);
+        }
+        System.out.println("MAX = " + boolVars.size());
+        model.sum(boolVarsA, "=", sum).post();
+        return sum;
+    }
+
     public void postInteractionReifTable(List<int[]> positivePairs) {
         BoolVar[] positive = new BoolVar[positivePairs.size()];
         for (int i = 0; i < positivePairs.size(); i++) {
@@ -416,5 +525,28 @@ public class AgroEcoPlanProblem {
                 + Arrays.toString(Arrays.stream(data.NEEDS_FORBIDDEN_BEDS).mapToInt(v -> v.size()).toArray()));
         System.out.println("NB MAX BEDS = " + nbMaxBeds);
 
+    }
+
+    public String[][] getCsvSolution(Solution solution) {
+        int maxWeek = Arrays.stream(data.NEEDS_END).max().getAsInt();
+        String[][] sol = new String[nbMaxBeds][];
+        for (int i = 1; i < nbMaxBeds + 1; i++) {
+            int finalI = i;
+            int[] needs = IntStream.range(0, assignment.length)
+                    .filter(v -> solution.getIntVal(assignment[v]) == finalI)
+                    .toArray();
+            String[] row = new String[maxWeek + 1];
+            row[0] = "Planche " + i;
+            for (int j = 1; j < maxWeek + 1; j++) {
+                row[j] = "";
+            }
+            for (int n : needs) {
+                for (int w = data.NEEDS_BEGIN[n]; w <= data.NEEDS_END[n]; w++) {
+                    row[w] = "" + n;
+                }
+            }
+            sol[i - 1] = row;
+        }
+        return sol;
     }
 }

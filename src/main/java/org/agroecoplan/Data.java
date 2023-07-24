@@ -22,10 +22,9 @@ import com.opencsv.exceptions.CsvException;
 
 public class Data {
 
-	String NEEDS_FILE; //= getClass().getClassLoader().getResource("besoinsreelsPetC_v7_1an.csv").getPath(); // SKIP = 15
-	//String NEEDS_FILE = getClass().getClassLoader().getResource("besoinsreelsPetC_v7_3ans.csv").getPath(); // SKIP = 14
-	//String NEEDS_FILE = getClass().getClassLoader().getResource("besoinsreelsPetC_v8_3ans.csv").getPath(); // SKIP = 14
-	String INTERACTIONS_FILE; // = getClass().getClassLoader().getResource("interactionscategoriespaut.csv").getPath();
+	String NEEDS_FILE;
+	String INTERACTIONS_FILE;
+	String PRECEDENCE_FILE;
 	String BEDS_FILE;
 
 	// Constants
@@ -40,12 +39,19 @@ public class Data {
 
 	static final int COL_ADJACENT_BEDS = 1;
 
+	// Columns precedence file
+
+	static final int COL_SP_1 = 0;
+	static final int COL_SP_2 = 1;
+	static final int COL_PRECEDENCE = 2;
+
 	// Data
 
 	Map<String, Integer> SPECIES_TO_ID;
 	int NB_SPECIES;
 	String[] SPECIES;
 	int[][] INTERACTIONS;
+	int[][] PRECEDENCES;
 
 	int NB_NEEDS;
 	int[] NEEDS_SPECIES;
@@ -62,9 +68,10 @@ public class Data {
 	public Data() throws IOException, CsvException {
 		this(Data.class.getClassLoader().getResource("besoinsreelsPetC_v7_1an.csv").getPath(),
 				Data.class.getClassLoader().getResource("interactionscategoriespaut.csv").getPath(),
-				Data.class.getClassLoader().getResource("donneesplanchesV2.csv").getPath());
+				Data.class.getClassLoader().getResource("donneesplanchesV2.csv").getPath(),
+				null);
 	}
-	
+
 	int count_comment_lines(String  filename) throws FileNotFoundException, IOException {
 		int skip = 0;
 		try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
@@ -80,9 +87,14 @@ public class Data {
 	}
 
 	public Data(String needs, String interactions, String beds) throws IOException, CsvException {
+		this(needs, interactions, beds, null);
+	}
+
+	public Data(String needs, String interactions, String beds, String precedences) throws IOException, CsvException {
 		this.NEEDS_FILE = needs;
 		this.INTERACTIONS_FILE = interactions;
 		this.BEDS_FILE = beds;
+		this.PRECEDENCE_FILE = precedences;
 
 		CSVParser csvParser = new CSVParserBuilder().withSeparator(';').withIgnoreQuotations(true).build();
 
@@ -101,15 +113,15 @@ public class Data {
 				adj = Arrays.stream(row[COL_ADJACENT_BEDS].split(","))
 						.mapToInt(v -> Integer.parseInt(v))
 						.toArray();
-				//System.out.println(Arrays.toString(adj));
 			}
 			this.ADJACENCY[i] = SetFactory.makeConstantSet(adj);
 		}
 
 		// Get interactions and species list
-		CSVReader readerInteractions = new CSVReaderBuilder(new FileReader(INTERACTIONS_FILE)).withSkipLines(count_comment_lines(INTERACTIONS_FILE) + 1)
+		CSVReader readerInteractions = new CSVReaderBuilder(new FileReader(INTERACTIONS_FILE))
+				.withSkipLines(count_comment_lines(INTERACTIONS_FILE) + 1)
 				.withCSVParser(csvParser).build();
-		
+
 		List<String[]> dataInteraction = readerInteractions.readAll();
 		this.SPECIES_TO_ID = new HashMap<>();
 		this.NB_SPECIES = dataInteraction.size();
@@ -122,16 +134,33 @@ public class Data {
 			SPECIES_TO_ID.put(row[0], i);
 			INTERACTIONS[i] = IntStream.range(1, row.length).map(j -> Integer.parseInt(row[j])).toArray();
 		}
-		// count number of comment lignes
-		
-
-		CSVReader readerNeeds = new CSVReaderBuilder(new FileReader(NEEDS_FILE)).withSkipLines(count_comment_lines(NEEDS_FILE)  + 1)
-				.withCSVParser(csvParser).build();
-
-		List<String[]> dataNeeds = readerNeeds.readAll();
+		// If given, get precedences
+		if (precedences != null) {
+			this.PRECEDENCES = new int[NB_SPECIES][NB_SPECIES];
+			CSVReader readerPrecedences = new CSVReaderBuilder(new FileReader(PRECEDENCE_FILE))
+					.withSkipLines(count_comment_lines(PRECEDENCE_FILE) + 1)
+					.withCSVParser(csvParser).build();
+			List<String[]> dataPrecedence = readerPrecedences.readAll();
+			for (int i = 0; i < NB_SPECIES; i++) {
+				String[] row = dataPrecedence.get(i);
+				PRECEDENCES[i] = IntStream.range(1, row.length).map(j -> {
+					if (row[j].equals("")) {
+						return 0;
+					}
+					return Integer.parseInt(row[j]);
+				}).toArray();
+			}
+		}
 
 		// Compute total needs
+
+		CSVReader readerNeeds = new CSVReaderBuilder(new FileReader(NEEDS_FILE))
+				.withSkipLines(count_comment_lines(NEEDS_FILE)  + 1)
+				.withCSVParser(csvParser).build();
+		List<String[]> dataNeeds = readerNeeds.readAll();
+
 		this.NB_NEEDS = 0;
+
 		for (int i = 0; i < dataNeeds.size(); i++) {
 			String[] row = dataNeeds.get(i);
 			int quantity = Integer.parseInt(row[COL_QUANTITY]);
@@ -152,7 +181,7 @@ public class Data {
 			int species = SPECIES_TO_ID.get(row[COL_SPECIES]);
 			int begin = Integer.parseInt(row[COL_BEGIN]);
 			int end = Integer.parseInt(row[COL_END]);
-			int returnDelay = Integer.parseInt(row[COL_RETURN_DELAY]);
+			int returnDelay = row[COL_RETURN_DELAY].equals("") ? 0 : Integer.parseInt(row[COL_RETURN_DELAY]);
 			String family = row[COL_FAMILY];
 			int[] forbiddenBeds;
 			if (row[COL_FORBIDDEN_BEDS].equals("")) {

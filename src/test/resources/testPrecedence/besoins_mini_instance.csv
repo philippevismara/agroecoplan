@@ -1,0 +1,9 @@
+#V1 ;;;;;;;;;;;;;;;;;;
+###DATA nbPlanches=2;;;;;;;;;;;;;;;;;;
+culture;categorie;debut;fin;quantite;planches_interdites;famille;delai_retour;exigeante;salissante;prof_enracinement;besoin_lumiere;exigence_de_soins;surveillance;aspersion;besoins_goute_a_goute;période_culture_ete;periode_culture_hiver;sortie
+Feve;feve;45;78;1;;;;;;;;;;;;;;
+Poireau;poireau;79;112;1;;;;;;;;;;;;;;
+Tomate;tomates;122;147;1;;;;;;;;;;;;;;
+Pdt_nouvelle;pomme_de_terre;57;78;1;;;;;;;;;;;;;;
+Brocoli;brocoli;87;108;1;;;;;;;;;;;;;;
+Carotte;carotte;117;133;1;;;;;;;;;;;;;;

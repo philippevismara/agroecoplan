@@ -1,0 +1,7 @@
+;brocoli;carotte;feve;poireau;pomme_de_terre;tomates
+brocoli;;;;;;
+carotte;1;;;;;
+feve;;;;;;
+poireau;;;1;;-1;
+pomme_de_terre;;;1;;;
+tomates;;;1;1;;
