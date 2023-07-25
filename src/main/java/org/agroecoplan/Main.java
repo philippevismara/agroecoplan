@@ -34,9 +34,19 @@ public class Main implements Runnable {
     String bedsFile;
 
     @CommandLine.Parameters(
-            description = "Path of the CSV file describing interactions between specis"
+            description = "Path of the CSV file describing interactions between species"
     )
     String interactionsFile;
+
+    @CommandLine.Parameters(
+            description = "Path of the CSV file describing precedences interactions between species"
+    )
+    String precedenceFile;
+
+    @CommandLine.Parameters(
+            description = "Path of the CSV file describing delay interactions between species"
+    )
+    String delaysFile;
 
     @CommandLine.Parameters(
             description = "Output file path"
@@ -69,6 +79,7 @@ public class Main implements Runnable {
             description = "Optimization objective to use. Currently available objectives are:\n" +
                     "-SAT: Constraint satisfaction only, no optimization objective\n" +
                     "-O1: Maximize the number of positive interactions\n" +
+                    "-O2: Maximize the number of positive precedences\n" +
                     "Default is SAT",
             defaultValue = "SAT"
     )
@@ -78,13 +89,14 @@ public class Main implements Runnable {
             names = {"-cst", "--constraints"},
             description = "Comma-separated list of the constraints to enforce (e.g. -cst C1,C2)." +
                     "Currently available constraints are:\n" +
-                    "-C1: Enforce return delays between crops from the same botanical family\n" +
+                    "-C1: Enforce return delays\n" +
                     "-C2: Forbid negative interactions between adjacent crops\n" +
                     "-C3: Dilute identical crop, i.e. forbid adjacency between crops from the same species\n" +
                     "-C4: Forbid some beds (e.g. due to light requirements). The information of forbidden beds is in " +
                         "the crop calendar file\n" +
-                    "-C7: group identical crops, i.e. force crops from the same species and same cultivation period" +
-                        " to be allocated to a connected set of vegetable beds"
+                    "-C5: group identical crops, i.e. force crops from the same species and same cultivation period" +
+                        " to be allocated to a connected set of vegetable beds\n" +
+                    "-C6: forbid negative precedences"
     )
     String constraints;
 
@@ -94,6 +106,13 @@ public class Main implements Runnable {
             defaultValue = "false"
     )
     boolean verbose;
+
+    @CommandLine.Option(
+            names = {"-s", "--show"},
+            description = "If true, display the solution",
+            defaultValue = "false"
+    )
+    boolean show;
 
     private static void enforceConstraints(AgroEcoPlanProblem problem, String[] constraints) {
         for (String c : constraints) {
@@ -107,8 +126,10 @@ public class Main implements Runnable {
                 case "C3":
                     problem.postDiluteSpeciesConstraint();
                     break;
-                case "C7":
+                case "C5":
                     problem.postGroupIdenticalCropsConstraint();
+                case "C6":
+                    problem.postForbidNegativePrecedencesConstraint();
                 default:
                     break;
             }
@@ -120,7 +141,7 @@ public class Main implements Runnable {
         Data data;
 
         String[] constraintList = constraints.split(",");
-        boolean includeForbiddenBeds = ArrayUtils.contains(constraintList, "C4-6");
+        boolean includeForbiddenBeds = ArrayUtils.contains(constraintList, "C4");
 
         if (needsFile == null || interactionsFile == null) {
             try {
@@ -132,7 +153,7 @@ public class Main implements Runnable {
             }
         } else {
             try {
-                data = new Data(needsFile, interactionsFile, bedsFile);
+                data = new Data(needsFile, interactionsFile, bedsFile, precedenceFile, delaysFile);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } catch (CsvException e) {
@@ -164,9 +185,20 @@ public class Main implements Runnable {
             // Set optimization objective
             switch (optimizationObjective) {
                 case "O1":
-                    problem.postInteractionConstraints();
+                    try {
+                        problem.postInteractionConstraints();
+                    } catch (AgroEcoPlanProblem.AgroecoplanException e) {
+                        throw new RuntimeException(e);
+                    }
                     problem.getModel().setObjective(true, problem.getGain());
                     break;
+                case "O2":
+                    try {
+                        problem.initNumberOfPositivePrecedences();
+                    } catch (AgroEcoPlanProblem.AgroecoplanException e) {
+                        throw new RuntimeException(e);
+                    }
+                    problem.getModel().setObjective(true, problem.getGain());
                 case "SAT":
                     break;
                 default:
@@ -182,9 +214,20 @@ public class Main implements Runnable {
                 // Set optimization objective
                 switch (optimizationObjective) {
                     case "O1":
-                        pb.postInteractionConstraints();
+                        try {
+                            pb.postInteractionConstraints();
+                        } catch (AgroEcoPlanProblem.AgroecoplanException e) {
+                            throw new RuntimeException(e);
+                        }
                         pb.getModel().setObjective(true, pb.getGain());
                         break;
+                    case "O2":
+                        try {
+                            problem.initNumberOfPositivePrecedences();
+                        } catch (AgroEcoPlanProblem.AgroecoplanException e) {
+                            throw new RuntimeException(e);
+                        }
+                        problem.getModel().setObjective(true, problem.getGain());
                     case "SAT":
                         break;
                     default:
@@ -208,9 +251,20 @@ public class Main implements Runnable {
             // Set optimization objective
             switch (optimizationObjective) {
                 case "O1":
-                    problem.postInteractionConstraints();
+                    try {
+                        problem.postInteractionConstraints();
+                    } catch (AgroEcoPlanProblem.AgroecoplanException e) {
+                        throw new RuntimeException(e);
+                    }
                     problem.getModel().setObjective(true, problem.getGain());
                     break;
+                case "O2":
+                    try {
+                        problem.initNumberOfPositivePrecedences();
+                    } catch (AgroEcoPlanProblem.AgroecoplanException e) {
+                        throw new RuntimeException(e);
+                    }
+                    problem.getModel().setObjective(true, problem.getGain());
                 case "SAT":
                     break;
                 default:
@@ -236,7 +290,11 @@ public class Main implements Runnable {
         }
 
         if (gain != null) {
-            System.out.println("Total positive interaction = " + sol.getIntVal(gain));
+            if (optimizationObjective.equals("O1")) {
+                System.out.println("Total positive interaction = " + sol.getIntVal(gain));
+            } else {
+                System.out.println("Total positive precedences = " + sol.getIntVal(gain));
+            }
         }
 
         if (verbose) {
@@ -296,6 +354,12 @@ public class Main implements Runnable {
             throw new RuntimeException(e);
         }
         System.out.println("Solution exported at: " + output);
+        if (show) {
+            String[] printSol = problem.getReadableSolution(sol);
+            for (String s : printSol) {
+                System.out.println(s);
+            }
+        }
     }
 
     public static void main(String[] args) {

@@ -22,11 +22,11 @@ public class Scenario1 {
     String interactions = getClass().getClassLoader().getResource("scenario1/interactionscategoriespaut.csv").getPath();
     String beds = getClass().getClassLoader().getResource("donneesplanchesV2.csv").getPath();
 
-    public static void main(String[] args) throws IOException, CsvException {
+    public static void main(String[] args) throws IOException, CsvException, AgroEcoPlanProblem.AgroecoplanException {
         Scenario1 sc1 = new Scenario1();
         Data data = new Data(sc1.needs, sc1.interactions, sc1.beds);
         boolean parallel = true;
-        String timeout = "1h";
+        String timeout = "30s";
         int nbCores = 8;
         String output = "/home/justeau-allaire/SOLUTIONS_AGROECO/scenario1.csv";
         IntVar[] assignments;

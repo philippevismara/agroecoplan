@@ -78,19 +78,30 @@ public class AgroEcoPlanProblem {
                         intervalGraphSets[i].add(j);
                         intervalGraphSetsWithRotations[i].add(j);
                     } else {
-                        // 1 - Need for compost constraint:
-                        //      if both b_i and b_j need compost, we extend their cultivation end to 1 year
-                        //      (52 weeks).
-                        // TODO
-                        // 2 - Turnover constraint:
-                        //      when b_i and b_j are from the same family, we use the return delay to extend their
-                        //      cultivation end, thus ensure the satisfaction of the return delay in the interval graph
-                        //      directly.
-                        if (data.NEEDS_FAMILY[i].equals(data.NEEDS_FAMILY[j])) {
-                            ei += data.NEEDS_RETURN_DELAY[i] * NB_WEEKS_IN_YEAR - (ei - si);
-                            ej += data.NEEDS_RETURN_DELAY[j] * NB_WEEKS_IN_YEAR - (ej - si);
-                            if (IntervalUtils.intersect(si, ei, sj, ej)) {
-                                intervalGraphSetsWithRotations[i].add(j);
+                        // TODO LEGACY WITH RETURN DELAY IN NEEDS FILE
+                        if (data.DELAYS == null) {
+                            if (data.NEEDS_FAMILY[i].equals(data.NEEDS_FAMILY[j])) {
+                                ei += data.NEEDS_RETURN_DELAY[i] * NB_WEEKS_IN_YEAR - (ei - si);
+                                ej += data.NEEDS_RETURN_DELAY[j] * NB_WEEKS_IN_YEAR - (ej - si);
+                                if (IntervalUtils.intersect(si, ei, sj, ej)) {
+                                    intervalGraphSetsWithRotations[i].add(j);
+                                }
+                            }
+                        } else {
+                            // 1 - Need for compost constraint:
+                            //      if both b_i and b_j need compost, we extend their cultivation end to 1 year
+                            //      (52 weeks).
+                            // TODO
+                            // 2 - Turnover constraint:
+                            //      when b_i and b_j need a return delay, we use is to extend their
+                            //      cultivation end, thus ensure the satisfaction of the return delay in the interval graph
+                            //      directly.
+                            if (data.DELAYS[data.NEEDS_SPECIES[i]][data.NEEDS_SPECIES[j]] > 0) {
+                                ei += data.NEEDS_RETURN_DELAY[i] * NB_WEEKS_IN_YEAR - (ei - si);
+                                ej += data.NEEDS_RETURN_DELAY[j] * NB_WEEKS_IN_YEAR - (ej - si);
+                                if (IntervalUtils.intersect(si, ei, sj, ej)) {
+                                    intervalGraphSetsWithRotations[i].add(j);
+                                }
                             }
                         }
                     }
@@ -271,7 +282,7 @@ public class AgroEcoPlanProblem {
      * advantage of this (no need to subtract negative interactions). We should not forget it if we want to
      * allow negative interactions in the future.
      */
-    public void postInteractionConstraints() {
+    public void postInteractionConstraints() throws AgroecoplanException {
         List<int[]> positivePairs = new ArrayList<>();
         for (int i = 0; i < data.NB_NEEDS; i++) {
             for (int j = i + 1; j < data.NB_NEEDS; j++) {
@@ -286,7 +297,7 @@ public class AgroEcoPlanProblem {
         //postInteractionCustomPropBased(positivePairs);
     }
 
-    public void postForbidNegativePrecedence() {
+    public void postForbidNegativePrecedencesConstraint() {
         // 1. Construct the sequence of non-overlapping crops.
         //     a. Sort all crops by descending order of crop beginning.
         Integer[] sortedCrops = IntStream.range(0, data.NB_NEEDS).mapToObj(i -> i).toArray(Integer[]::new);
@@ -343,7 +354,7 @@ public class AgroEcoPlanProblem {
         }
     }
 
-    public IntVar getNumberOfPositivePrecedences() {
+    public void initNumberOfPositivePrecedences() throws AgroecoplanException {
         // 1. Construct the sequence of non-overlapping crops.
         //     a. Sort all crops by descending order of crop beginning.
         Integer[] sortedCrops = IntStream.range(0, data.NB_NEEDS).mapToObj(i -> i).toArray(Integer[]::new);
@@ -385,12 +396,14 @@ public class AgroEcoPlanProblem {
         for (int i = 0; i < boolVarsA.length; i++) {
             boolVarsA[i] = boolVars.get(i);
         }
-        System.out.println("MAX = " + boolVars.size());
         model.sum(boolVarsA, "=", sum).post();
-        return sum;
+        if (gain != null) {
+            throw new AgroecoplanException("Gain is already defined");
+        }
+        this.gain = sum;
     }
 
-    public void postInteractionReifTable(List<int[]> positivePairs) {
+    public void postInteractionReifTable(List<int[]> positivePairs) throws AgroecoplanException {
         BoolVar[] positive = new BoolVar[positivePairs.size()];
         for (int i = 0; i < positivePairs.size(); i++) {
             int[] p = positivePairs.get(i);
@@ -404,21 +417,27 @@ public class AgroEcoPlanProblem {
             }
             positive[i] = model.table(assignment[p[0]], assignment[p[1]], allowed).reify();
         }
+        if (gain != null) {
+            throw new AgroecoplanException("Gain is already defined");
+        }
         gain = model.intVar(1, positivePairs.size());
         model.sum(positive, "=", gain).post();
     }
 
-    public void postInteractionReifBased(List<int[]> positivePairs) {
+    public void postInteractionReifBased(List<int[]> positivePairs) throws AgroecoplanException {
         BoolVar[] positiveDists = new BoolVar[positivePairs.size()];
         for (int i = 0; i < positivePairs.size(); i++) {
             int[] p = positivePairs.get(i);
             positiveDists[i] = model.distance(assignment[p[0]], assignment[p[1]], "=", 1).reify();
         }
+        if (gain != null) {
+            throw new AgroecoplanException("Gain is already defined");
+        }
         gain = model.intVar(1, positivePairs.size());
         model.sum(positiveDists, "=", gain).post();
     }
 
-    private void postInteractionCountBased(List<int[]> positivePairs) {
+    private void postInteractionCountBased(List<int[]> positivePairs) throws AgroecoplanException {
         IntVar[][] positiveAssignments = new IntVar[positivePairs.size()][];
         for (int i = 0; i < positivePairs.size(); i++) {
             int[] p = positivePairs.get(i);
@@ -430,15 +449,21 @@ public class AgroEcoPlanProblem {
             positiveDists[i] = model.intVar(1, nbMaxBeds);
             model.distance(assignment[p[0]], assignment[p[1]], "=", positiveDists[i]).post();
         }
+        if (gain != null) {
+            throw new AgroecoplanException("Gain is already defined");
+        }
         gain = model.intVar(1, positivePairs.size());
         model.count(1, positiveDists, gain).post();
     }
 
-    private void postInteractionCustomPropBased(List<int[]> positivePairs) {
+    private void postInteractionCustomPropBased(List<int[]> positivePairs) throws AgroecoplanException {
         IntVar[][] positiveAssignments = new IntVar[positivePairs.size()][];
         for (int i = 0; i < positivePairs.size(); i++) {
             int[] p = positivePairs.get(i);
             positiveAssignments[i] = new IntVar[] { assignment[p[0]], assignment[p[1]] };
+        }
+        if (gain != null) {
+            throw new AgroecoplanException("Gain is already defined");
         }
         gain = model.intVar(1, positivePairs.size());
         model.post(new Constraint("interactionGain", new PropInteractionGain(gain, positiveAssignments)));
@@ -527,6 +552,31 @@ public class AgroEcoPlanProblem {
 
     }
 
+    public String[] getReadableSolution(Solution solution) {
+        int maxWeek = Arrays.stream(data.NEEDS_END).max().getAsInt();
+        String[] sol = new String[nbMaxBeds];
+        for (int i = 1; i < nbMaxBeds + 1; i++) {
+            int finalI = i;
+            Integer[] needs = IntStream.range(0, assignment.length)
+                    .filter(v -> solution.getIntVal(assignment[v]) == finalI)
+                    .mapToObj(v -> v)
+                    .toArray(Integer[]::new);
+            Arrays.sort(needs, (a, b) -> data.NEEDS_BEGIN[a] - data.NEEDS_BEGIN[b]);
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("Planche " + i + ": ");
+            for (int k = 0; k < needs.length; k++) {
+                int crop = needs[k];
+                if (k > 0) {
+                    stringBuilder.append("--");
+                }
+                stringBuilder.append(" [" + data.SPECIES[data.NEEDS_SPECIES[crop]]);
+                stringBuilder.append(": " + data.NEEDS_BEGIN[crop] + " -> " + data.NEEDS_END[crop] + "] ");
+            }
+            sol[i - 1] = stringBuilder.toString();
+        }
+        return sol;
+    }
+
     public String[][] getCsvSolution(Solution solution) {
         int maxWeek = Arrays.stream(data.NEEDS_END).max().getAsInt();
         String[][] sol = new String[nbMaxBeds][];
@@ -548,5 +598,11 @@ public class AgroEcoPlanProblem {
             sol[i - 1] = row;
         }
         return sol;
+    }
+
+    public class AgroecoplanException extends Exception {
+        public AgroecoplanException(String msg) {
+            super(msg);
+        }
     }
 }

@@ -25,6 +25,7 @@ public class Data {
 	String NEEDS_FILE;
 	String INTERACTIONS_FILE;
 	String PRECEDENCE_FILE;
+	String DELAYS_FILE;
 	String BEDS_FILE;
 
 	// Constants
@@ -52,6 +53,7 @@ public class Data {
 	String[] SPECIES;
 	int[][] INTERACTIONS;
 	int[][] PRECEDENCES;
+	int[][] DELAYS;
 
 	int NB_NEEDS;
 	int[] NEEDS_SPECIES;
@@ -69,7 +71,7 @@ public class Data {
 		this(Data.class.getClassLoader().getResource("besoinsreelsPetC_v7_1an.csv").getPath(),
 				Data.class.getClassLoader().getResource("interactionscategoriespaut.csv").getPath(),
 				Data.class.getClassLoader().getResource("donneesplanchesV2.csv").getPath(),
-				null);
+				null, null);
 	}
 
 	int count_comment_lines(String  filename) throws FileNotFoundException, IOException {
@@ -87,14 +89,15 @@ public class Data {
 	}
 
 	public Data(String needs, String interactions, String beds) throws IOException, CsvException {
-		this(needs, interactions, beds, null);
+		this(needs, interactions, beds, null, null);
 	}
 
-	public Data(String needs, String interactions, String beds, String precedences) throws IOException, CsvException {
+	public Data(String needs, String interactions, String beds, String precedences, String delays) throws IOException, CsvException {
 		this.NEEDS_FILE = needs;
 		this.INTERACTIONS_FILE = interactions;
 		this.BEDS_FILE = beds;
 		this.PRECEDENCE_FILE = precedences;
+		this.DELAYS_FILE = delays;
 
 		CSVParser csvParser = new CSVParserBuilder().withSeparator(';').withIgnoreQuotations(true).build();
 
@@ -144,6 +147,23 @@ public class Data {
 			for (int i = 0; i < NB_SPECIES; i++) {
 				String[] row = dataPrecedence.get(i);
 				PRECEDENCES[i] = IntStream.range(1, row.length).map(j -> {
+					if (row[j].equals("")) {
+						return 0;
+					}
+					return Integer.parseInt(row[j]);
+				}).toArray();
+			}
+		}
+		// If given, get delays
+		if (delays != null) {
+			this.DELAYS = new int[NB_SPECIES][NB_SPECIES];
+			CSVReader readerPrecedences = new CSVReaderBuilder(new FileReader(DELAYS_FILE))
+					.withSkipLines(count_comment_lines(DELAYS_FILE) + 1)
+					.withCSVParser(csvParser).build();
+			List<String[]> dataPrecedence = readerPrecedences.readAll();
+			for (int i = 0; i < NB_SPECIES; i++) {
+				String[] row = dataPrecedence.get(i);
+				DELAYS[i] = IntStream.range(1, row.length).map(j -> {
 					if (row[j].equals("")) {
 						return 0;
 					}
