@@ -6,7 +6,7 @@
 
     <groupId>org.example</groupId>
     <artifactId>agroecoplan</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.2.1</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>

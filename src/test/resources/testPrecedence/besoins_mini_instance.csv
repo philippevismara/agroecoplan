@@ -1,6 +1,6 @@
 #V1 ;;;;;;;;;;;;;;;;;;
 ###DATA nbPlanches=2;;;;;;;;;;;;;;;;;;
-culture;categorie;debut;fin;quantite;planches_interdites;famille;delai_retour;exigeante;salissante;prof_enracinement;besoin_lumiere;exigence_de_soins;surveillance;aspersion;besoins_goute_a_goute;période_culture_ete;periode_culture_hiver;sortie
+culture;categorie;debut;fin;quantite;planches_interdites;famille;delai_retour;exigeante;salissante;prof_enracinement;besoin_lumiere;exigence_de_soins;surveillance;aspersion;besoins_goute_a_goute;pï¿½riode_culture_ete;periode_culture_hiver;sortie
 Feve;feve;45;78;1;;;;;;;;;;;;;;
 Poireau;poireau;79;112;1;;;;;;;;;;;;;;
 Tomate;tomates;122;147;1;;;;;;;;;;;;;;

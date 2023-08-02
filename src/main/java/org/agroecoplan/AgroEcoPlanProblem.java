@@ -125,7 +125,9 @@ public class AgroEcoPlanProblem {
         for (int i = 0; i < data.NB_NEEDS; i++) {
             int finalI = i;
             int[] domain;
-            if (includeForbiddenBeds) {
+            if (data.NEEDS_FIXED_BED[i] >= 0) {
+                domain = new int[] {data.NEEDS_FIXED_BED[i]};
+            } else if (includeForbiddenBeds) {
                 domain = IntStream.range(1, nbMaxBeds + 1)
                         .filter(v -> !data.NEEDS_FORBIDDEN_BEDS[finalI].contains(v))
                         .toArray();
@@ -306,14 +308,14 @@ public class AgroEcoPlanProblem {
         for (int i = 0; i < sortedCrops.length; i++) {
             int cropA = sortedCrops[i];
             int spA = data.NEEDS_SPECIES[cropA];
-            boolean startRegular = false;
+            boolean startSmartTable = false;
             for (int j = i + 1; j <sortedCrops.length; j++) {
                 int cropB = sortedCrops[j];
                 int spB = data.NEEDS_SPECIES[cropB];
                 // If cropB can precede cropA, then following sequences need a regular constraint
                 if (data.PRECEDENCES[spA][spB] >= 0) {
-                    startRegular = true;
-                } else if (!startRegular) {
+                    startSmartTable = true;
+                } else if (!startSmartTable) {
                     // If cropB cannot precede cropA and there is no option of intermediate preceding crop
                     // (startRegular = false), then assignment[cropA] != assignment[cropB]
                     model.arithm(assignment[cropA], "!=", assignment[cropB]).post();

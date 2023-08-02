@@ -37,6 +37,7 @@ public class Data {
 	static final int COL_FORBIDDEN_BEDS = 5;
 	static final int COL_FAMILY = 6;
 	static final int COL_RETURN_DELAY = 7;
+	static final int COL_FIXED_BED = 18;
 
 	static final int COL_ADJACENT_BEDS = 1;
 
@@ -63,6 +64,8 @@ public class Data {
 	String[] NEEDS_FAMILY;
 	int[] NEEDS_RETURN_DELAY;
 	List<ISet> GROUPS; // Groups of identical needs (e.g. 5 tomatoes)
+	int[] NEEDS_FIXED_BED; // If specified in the input, some needs can be assigned a fixed bed. If so, the index
+						   // of the bed is specified here, otherwise set to -1.
 
 	int NB_BEDS;
 	ISet[] ADJACENCY;
@@ -135,7 +138,12 @@ public class Data {
 			String[] row = dataInteraction.get(i);
 			SPECIES[i] = row[0];
 			SPECIES_TO_ID.put(row[0], i);
-			INTERACTIONS[i] = IntStream.range(1, row.length).map(j -> Integer.parseInt(row[j])).toArray();
+			INTERACTIONS[i] = IntStream.range(1, row.length).map(j -> {
+				if (row[j].equals("")) {
+					return 0;
+				}
+				return Integer.parseInt(row[j]);
+			}).toArray();
 		}
 		// If given, get precedences
 		if (precedences != null) {
@@ -193,6 +201,7 @@ public class Data {
 		NEEDS_FORBIDDEN_BEDS = new ISet[NB_NEEDS];
 		NEEDS_FAMILY = new String[NB_NEEDS];
 		NEEDS_RETURN_DELAY = new int[NB_NEEDS];
+		NEEDS_FIXED_BED = new int[NB_NEEDS];
 
 		int offset = 0;
 		for (int i = 0; i < dataNeeds.size(); i++) {
@@ -210,6 +219,14 @@ public class Data {
 				forbiddenBeds = Arrays.stream(row[COL_FORBIDDEN_BEDS].split(",")).mapToInt(v -> Integer.parseInt(v))
 						.toArray();
 			}
+			int[] fixedBeds;
+			if (row[COL_FIXED_BED].equals("")) {
+				fixedBeds = IntStream.range(0, quantity).map(v -> -1).toArray();
+			} else {
+				fixedBeds = Arrays.stream(row[COL_FIXED_BED].split(","))
+						.mapToInt(v -> Integer.parseInt(v))
+						.toArray();
+			}
 			for (int j = i + offset; j < i + offset + quantity; j++) {
 				NEEDS_SPECIES[j] = species;
 				NEEDS_BEGIN[j] = begin;
@@ -217,6 +234,7 @@ public class Data {
 				NEEDS_RETURN_DELAY[j] = returnDelay;
 				NEEDS_FAMILY[j] = family;
 				NEEDS_FORBIDDEN_BEDS[j] = SetFactory.makeConstantSet(forbiddenBeds);
+				NEEDS_FIXED_BED[j] = fixedBeds[j - i - offset];
 			}
 			if (quantity > 1) {
 				ISet s = SetFactory.makeBipartiteSet(0);
