@@ -200,6 +200,7 @@ public class Main implements Runnable {
                     }
                     problem.getModel().setObjective(true, problem.getGain());
                 case "SAT":
+                    problem.getModel().getSolver().limitSolution(1);
                     break;
                 default:
                     System.out.println("Warning: incorrect optimization objective key, SAT will be used.");
@@ -229,6 +230,7 @@ public class Main implements Runnable {
                         }
                         pb.getModel().setObjective(true, pb.getGain());
                     case "SAT":
+                        pb.getModel().getSolver().limitSolution(1);
                         break;
                     default:
                         System.out.println("Warning: incorrect optimization objective key, SAT will be used.");
@@ -241,10 +243,16 @@ public class Main implements Runnable {
             portfolio.stealNogoodsOnRestarts();
             Solution[] sols = portfolio.streamSolutions().toArray(Solution[]::new);
             problem = portfolio.finderProblem;
-            Model bestModel = problem.getModel();
-            sol = sols[sols.length - 1];
-            gain = problem.getGain();
-            assignments = problem.getAssignment();
+            if (problem == null) {
+                sol = null;
+                gain = null;
+                assignments = null;
+            } else {
+                Model bestModel = problem.getModel();
+                sol = sols[sols.length - 1];
+                gain = problem.getGain();
+                assignments = problem.getAssignment();
+            }
         } else {
             problem = new AgroEcoPlanProblem(data, includeForbiddenBeds, verbose);
             enforceConstraints(problem, constraintList);
@@ -285,7 +293,7 @@ public class Main implements Runnable {
         }
 
         if (sol == null) {
-            System.out.println("THERE IS NO SOLUTION");
+            System.out.println("NO SOLUTION FOUND");
             return;
         }
 

@@ -312,7 +312,7 @@ public class AgroEcoPlanProblem {
             for (int j = i + 1; j <sortedCrops.length; j++) {
                 int cropB = sortedCrops[j];
                 int spB = data.NEEDS_SPECIES[cropB];
-                // If cropB can precede cropA, then following sequences need a regular constraint
+                // If cropB can precede cropA, then following sequences need a smart table constraint
                 if (data.PRECEDENCES[spA][spB] >= 0) {
                     startSmartTable = true;
                 } else if (!startSmartTable) {
@@ -369,7 +369,7 @@ public class AgroEcoPlanProblem {
             for (int j = i + 1; j <sortedCrops.length; j++) {
                 int cropB = sortedCrops[j];
                 int spB = data.NEEDS_SPECIES[cropB];
-                // If cropB can precede cropA, then following sequences need a regular constraint
+                // If cropB can precede cropA, then following sequences need a smart table constraint
                 if (data.PRECEDENCES[spA][spB] == 1) {
                     // Reconstruct the assignment sequence, backward from cropA to cropB (inclusive)
                     IntVar[] seq = new IntVar[j - i + 1];
