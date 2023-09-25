@@ -210,7 +210,7 @@ public class Main implements Runnable {
             portfolio.addModel(problem);
             for (int i = 1; i < nbCores; i++) {
                 AgroEcoPlanProblem pb = new AgroEcoPlanProblem(data, includeForbiddenBeds, verbose);
-                enforceConstraints(problem, constraintList);
+                enforceConstraints(pb, constraintList);
                 // Set optimization objective
                 switch (optimizationObjective) {
                     case "O1":
@@ -223,11 +223,11 @@ public class Main implements Runnable {
                         break;
                     case "O2":
                         try {
-                            problem.initNumberOfPositivePrecedences();
+                            pb.initNumberOfPositivePrecedences();
                         } catch (AgroEcoPlanProblem.AgroecoplanException e) {
                             throw new RuntimeException(e);
                         }
-                        problem.getModel().setObjective(true, problem.getGain());
+                        pb.getModel().setObjective(true, pb.getGain());
                     case "SAT":
                         break;
                     default:
@@ -338,22 +338,24 @@ public class Main implements Runnable {
             solution[i - 1] = row;
         }
 
-        CSVWriter writer = null;
-        try {
-            writer = (CSVWriter) new CSVWriterBuilder(new FileWriter(output)).withSeparator(';').build();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        if (!output.equals("null")) {
+            CSVWriter writer = null;
+            try {
+                writer = (CSVWriter) new CSVWriterBuilder(new FileWriter(output)).withSeparator(';').build();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
-        for (String[] row : solution) {
-            writer.writeNext(row, false);
+            for (String[] row : solution) {
+                writer.writeNext(row, false);
+            }
+            try {
+                writer.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println("Solution exported at: " + output);
         }
-        try {
-            writer.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("Solution exported at: " + output);
         if (show) {
             String[] printSol = problem.getReadableSolution(sol);
             for (String s : printSol) {

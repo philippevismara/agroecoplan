@@ -422,7 +422,7 @@ public class AgroEcoPlanProblem {
         if (gain != null) {
             throw new AgroecoplanException("Gain is already defined");
         }
-        gain = model.intVar(1, positivePairs.size());
+        gain = model.intVar(0, positivePairs.size());
         model.sum(positive, "=", gain).post();
     }
 
