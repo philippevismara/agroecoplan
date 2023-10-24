@@ -74,6 +74,7 @@ public class Main implements Runnable {
     )
     String timeout;
 
+
     @CommandLine.Option(
             names = {"-opt", "--optimization-objective"},
             description = "Optimization objective to use. Currently available objectives are:\n" +
@@ -84,6 +85,20 @@ public class Main implements Runnable {
             defaultValue = "SAT"
     )
     String optimizationObjective;
+
+    @CommandLine.Option(
+            names = {"-minO1"},
+            description = "Defines a minimum value (constraint for the objective O1.",
+            defaultValue = "0"
+    )
+    int minO1;
+
+    @CommandLine.Option(
+            names = {"-minO2"},
+            description = "Defines a minimum value (constraint for the objective O2.",
+            defaultValue = "0"
+    )
+    int minO2;
 
     @CommandLine.Option(
             names = {"-cst", "--constraints"},
@@ -186,7 +201,15 @@ public class Main implements Runnable {
             switch (optimizationObjective) {
                 case "O1":
                     try {
-                        problem.postInteractionConstraints();
+                        IntVar g = problem.postInteractionConstraints();
+                        problem.setGain(g);
+                        if (minO1 > 0) {
+                            problem.getModel().arithm(g, ">=", minO1).post();
+                        }
+                        if (minO2 > 0) {
+                            IntVar O2 = problem.initNumberOfPositivePrecedencesCountBased();
+                            problem.getModel().arithm(O2, ">=", minO2).post();
+                        }
                     } catch (AgroEcoPlanProblem.AgroecoplanException e) {
                         throw new RuntimeException(e);
                     }
@@ -195,12 +218,32 @@ public class Main implements Runnable {
                 case "O2":
                     try {
                         //problem.initNumberOfPositivePrecedences();
-                        problem.initNumberOfPositivePrecedencesCountBased();
+                        IntVar g = problem.initNumberOfPositivePrecedencesCountBased();
+                        problem.setGain(g);
+                        if (minO2 > 0) {
+                            problem.getModel().arithm(g, ">=", minO2).post();
+                        }
+                        if (minO1 > 0) {
+                            IntVar O1 = problem.postInteractionConstraints();
+                            problem.getModel().arithm(O1, ">=", minO1).post();
+                        }
                     } catch (AgroEcoPlanProblem.AgroecoplanException e) {
                         throw new RuntimeException(e);
                     }
                     problem.getModel().setObjective(true, problem.getGain());
                 case "SAT":
+                    try {
+                        if (minO1 > 0) {
+                            IntVar O1 = problem.postInteractionConstraints();
+                            problem.getModel().arithm(O1, ">=", minO1).post();
+                        }
+                        if (minO2 > 0) {
+                            IntVar O2 = problem.initNumberOfPositivePrecedencesCountBased();
+                            problem.getModel().arithm(O2, ">=", minO2).post();
+                        }
+                    } catch (AgroEcoPlanProblem.AgroecoplanException e) {
+                        throw new RuntimeException(e);
+                    }
                     problem.getModel().getSolver().limitSolution(1);
                     break;
                 default:
@@ -217,7 +260,15 @@ public class Main implements Runnable {
                 switch (optimizationObjective) {
                     case "O1":
                         try {
-                            pb.postInteractionConstraints();
+                            IntVar g = pb.postInteractionConstraints();
+                            pb.setGain(g);
+                            if (minO1 > 0) {
+                                pb.getModel().arithm(g, ">=", minO1).post();
+                            }
+                            if (minO2 > 0) {
+                                IntVar O2 = pb.initNumberOfPositivePrecedencesCountBased();
+                                pb.getModel().arithm(O2, ">=", minO2).post();
+                            }
                         } catch (AgroEcoPlanProblem.AgroecoplanException e) {
                             throw new RuntimeException(e);
                         }
@@ -226,12 +277,32 @@ public class Main implements Runnable {
                     case "O2":
                         try {
                             //pb.initNumberOfPositivePrecedences();
-                            pb.initNumberOfPositivePrecedencesCountBased();
+                            IntVar g = pb.initNumberOfPositivePrecedencesCountBased();
+                            pb.setGain(g);
+                            if (minO2 > 0) {
+                                pb.getModel().arithm(g, ">=", minO2).post();
+                            }
+                            if (minO1 > 0) {
+                                IntVar O1 = pb.postInteractionConstraints();
+                                pb.getModel().arithm(O1, ">=", minO1).post();
+                            }
                         } catch (AgroEcoPlanProblem.AgroecoplanException e) {
                             throw new RuntimeException(e);
                         }
                         pb.getModel().setObjective(true, pb.getGain());
                     case "SAT":
+                        try {
+                            if (minO1 > 0) {
+                                IntVar O1 = pb.postInteractionConstraints();
+                                pb.getModel().arithm(O1, ">=", minO1).post();
+                            }
+                            if (minO2 > 0) {
+                                IntVar O2 = pb.initNumberOfPositivePrecedencesCountBased();
+                                pb.getModel().arithm(O2, ">=", minO2).post();
+                            }
+                        } catch (AgroEcoPlanProblem.AgroecoplanException e) {
+                            throw new RuntimeException(e);
+                        }
                         pb.getModel().getSolver().limitSolution(1);
                         break;
                     default:
@@ -262,7 +333,15 @@ public class Main implements Runnable {
             switch (optimizationObjective) {
                 case "O1":
                     try {
-                        problem.postInteractionConstraints();
+                        IntVar g = problem.postInteractionConstraints();
+                        problem.setGain(g);
+                        if (minO1 > 0) {
+                            problem.getModel().arithm(g, ">=", minO1).post();
+                        }
+                        if (minO2 > 0) {
+                            IntVar O2 = problem.initNumberOfPositivePrecedencesCountBased();
+                            problem.getModel().arithm(O2, ">=", minO2).post();
+                        }
                     } catch (AgroEcoPlanProblem.AgroecoplanException e) {
                         throw new RuntimeException(e);
                     }
@@ -271,12 +350,32 @@ public class Main implements Runnable {
                 case "O2":
                     try {
                         //problem.initNumberOfPositivePrecedences();
-                        problem.initNumberOfPositivePrecedencesCountBased();
+                        IntVar g = problem.initNumberOfPositivePrecedencesCountBased();
+                        problem.setGain(g);
+                        if (minO2 > 0) {
+                            problem.getModel().arithm(g, ">=", minO2).post();
+                        }
+                        if (minO1 > 0) {
+                            IntVar O1 = problem.postInteractionConstraints();
+                            problem.getModel().arithm(O1, ">=", minO1).post();
+                        }
                     } catch (AgroEcoPlanProblem.AgroecoplanException e) {
                         throw new RuntimeException(e);
                     }
                     problem.getModel().setObjective(true, problem.getGain());
                 case "SAT":
+                    try {
+                        if (minO1 > 0) {
+                            IntVar O1 = problem.postInteractionConstraints();
+                            problem.getModel().arithm(O1, ">=", minO1).post();
+                        }
+                        if (minO2 > 0) {
+                            IntVar O2 = problem.initNumberOfPositivePrecedencesCountBased();
+                            problem.getModel().arithm(O2, ">=", minO2).post();
+                        }
+                    } catch (AgroEcoPlanProblem.AgroecoplanException e) {
+                        throw new RuntimeException(e);
+                    }
                     break;
                 default:
                     System.out.println("Warning: incorrect optimization objective key, SAT will be used.");

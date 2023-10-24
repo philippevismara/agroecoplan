@@ -284,7 +284,7 @@ public class AgroEcoPlanProblem {
      * advantage of this (no need to subtract negative interactions). We should not forget it if we want to
      * allow negative interactions in the future.
      */
-    public void postInteractionConstraints() throws AgroecoplanException {
+    public IntVar postInteractionConstraints() throws AgroecoplanException {
         List<int[]> positivePairs = new ArrayList<>();
         for (int i = 0; i < data.NB_NEEDS; i++) {
             for (int j = i + 1; j < data.NB_NEEDS; j++) {
@@ -295,7 +295,7 @@ public class AgroEcoPlanProblem {
                 }
             }
         }
-        postInteractionReifTable(positivePairs);
+        return postInteractionReifTable(positivePairs);
         //postInteractionCustomPropBased(positivePairs);
     }
 
@@ -405,7 +405,7 @@ public class AgroEcoPlanProblem {
         this.gain = sum;
     }
 
-    public void initNumberOfPositivePrecedencesCountBased() throws AgroecoplanException {
+    public IntVar initNumberOfPositivePrecedencesCountBased() throws AgroecoplanException {
         // 1. Construct the sequence of non-overlapping crops.
         //     a. Sort all crops by descending order of crop beginning.
         Integer[] sortedCrops = IntStream.range(0, data.NB_NEEDS).mapToObj(i -> i).toArray(Integer[]::new);
@@ -448,13 +448,14 @@ public class AgroEcoPlanProblem {
             boolVarsA[i] = boolVars.get(i);
         }
         model.sum(boolVarsA, "=", sum).post();
-        if (gain != null) {
+        return sum;
+/*        if (gain != null) {
             throw new AgroecoplanException("Gain is already defined");
         }
-        this.gain = sum;
+        this.gain = sum;*/
     }
 
-    public void postInteractionReifTable(List<int[]> positivePairs) throws AgroecoplanException {
+    public IntVar postInteractionReifTable(List<int[]> positivePairs) throws AgroecoplanException {
         BoolVar[] positive = new BoolVar[positivePairs.size()];
         for (int i = 0; i < positivePairs.size(); i++) {
             int[] p = positivePairs.get(i);
@@ -471,8 +472,9 @@ public class AgroEcoPlanProblem {
         if (gain != null) {
             throw new AgroecoplanException("Gain is already defined");
         }
-        gain = model.intVar(0, positivePairs.size());
-        model.sum(positive, "=", gain).post();
+        IntVar g = model.intVar(0, positivePairs.size());
+        model.sum(positive, "=", g).post();
+        return g;
     }
 
     public void postInteractionReifBased(List<int[]> positivePairs) throws AgroecoplanException {
@@ -575,6 +577,11 @@ public class AgroEcoPlanProblem {
     public IntVar getGain() {
         return gain;
     }
+
+    public void setGain(IntVar gain) {
+        this.gain = gain;
+    }
+
 
     public IntVar getNbBeds() {
         return nbBeds;
