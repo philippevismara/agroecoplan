@@ -430,9 +430,10 @@ public class AgroEcoPlanProblem {
                     } else {
                         // Post reified count
                         IntVar[] intermediate = new IntVar[seq.length - 2];
-                        for (int k = 1; k < seq.length - 1; k++) {
+                        /*for (int k = 1; k < seq.length - 1; k++) {
                             intermediate[k - 1] = seq[k];
-                        }
+                        }*/
+                        System.arraycopy(seq, 1, intermediate, 0, seq.length - 2);
                         BoolVar b1 = model.count(seq[0], intermediate, model.intVar(0)).reify();
                         // Post reified equal
                         BoolVar b2 = model.arithm(seq[0], "=", seq[seq.length - 1]).reify();
