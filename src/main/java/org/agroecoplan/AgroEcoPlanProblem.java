@@ -405,6 +405,54 @@ public class AgroEcoPlanProblem {
         this.gain = sum;
     }
 
+    public void initNumberOfPositivePrecedencesCountBased() throws AgroecoplanException {
+        // 1. Construct the sequence of non-overlapping crops.
+        //     a. Sort all crops by descending order of crop beginning.
+        Integer[] sortedCrops = IntStream.range(0, data.NB_NEEDS).mapToObj(i -> i).toArray(Integer[]::new);
+        Arrays.sort(sortedCrops, (i, j) -> data.NEEDS_BEGIN[j] - data.NEEDS_BEGIN[i]);
+        ArrayList<BoolVar> boolVars = new ArrayList<>();
+        //     b. for all crop, construct the non overlapping precedence sequence.
+        for (int i = 0; i < sortedCrops.length; i++) {
+            int cropA = sortedCrops[i];
+            int spA = data.NEEDS_SPECIES[cropA];
+            for (int j = i + 1; j <sortedCrops.length; j++) {
+                int cropB = sortedCrops[j];
+                int spB = data.NEEDS_SPECIES[cropB];
+                // If cropB can precede cropA, then following sequences need a smart table constraint
+                if (data.PRECEDENCES[spA][spB] == 1) {
+                    // Reconstruct the assignment sequence, backward from cropA to cropB (inclusive)
+                    IntVar[] seq = new IntVar[j - i + 1];
+                    for (int k = 0; k < j - i + 1; k++) {
+                        seq[k] = assignment[sortedCrops[k + i]];
+                    }
+                    if (seq.length == 2) {
+                        boolVars.add(model.arithm(seq[0], "=", seq[1]).reify());
+                    } else {
+                        // Post reified count
+                        IntVar[] intermediate = new IntVar[seq.length - 2];
+                        for (int k = 1; k < seq.length - 1; k++) {
+                            intermediate[k - 1] = seq[k];
+                        }
+                        BoolVar b1 = model.count(seq[0], intermediate, model.intVar(0)).reify();
+                        // Post reified equal
+                        BoolVar b2 = model.arithm(seq[0], "=", seq[seq.length - 1]).reify();
+                        boolVars.add(model.and(b1, b2).reify());
+                    }
+                }
+            }
+        }
+        IntVar sum = model.intVar(0, boolVars.size());
+        BoolVar[] boolVarsA = new BoolVar[boolVars.size()];
+        for (int i = 0; i < boolVarsA.length; i++) {
+            boolVarsA[i] = boolVars.get(i);
+        }
+        model.sum(boolVarsA, "=", sum).post();
+        if (gain != null) {
+            throw new AgroecoplanException("Gain is already defined");
+        }
+        this.gain = sum;
+    }
+
     public void postInteractionReifTable(List<int[]> positivePairs) throws AgroecoplanException {
         BoolVar[] positive = new BoolVar[positivePairs.size()];
         for (int i = 0; i < positivePairs.size(); i++) {

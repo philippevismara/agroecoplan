@@ -194,7 +194,8 @@ public class Main implements Runnable {
                     break;
                 case "O2":
                     try {
-                        problem.initNumberOfPositivePrecedences();
+                        //problem.initNumberOfPositivePrecedences();
+                        problem.initNumberOfPositivePrecedencesCountBased();
                     } catch (AgroEcoPlanProblem.AgroecoplanException e) {
                         throw new RuntimeException(e);
                     }
