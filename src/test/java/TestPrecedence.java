@@ -21,7 +21,7 @@ public class TestPrecedence {
         );
 
         pb.postForbidNegativePrecedencesConstraint();
-        pb.initNumberOfPositivePrecedences();
+        pb.initNumberOfPositivePrecedencesCountBased();
 
         pb.getModel().getSolver().limitTime("30s");
 
