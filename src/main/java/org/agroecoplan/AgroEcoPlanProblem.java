@@ -469,9 +469,9 @@ public class AgroEcoPlanProblem {
             }
             positive[i] = model.table(assignment[p[0]], assignment[p[1]], allowed).reify();
         }
-        if (gain != null) {
+/*        if (gain != null) {
             throw new AgroecoplanException("Gain is already defined");
-        }
+        }*/
         IntVar g = model.intVar(0, positivePairs.size());
         model.sum(positive, "=", g).post();
         return g;
