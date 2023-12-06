@@ -56,6 +56,9 @@ public class Data {
 	int[][] PRECEDENCES;
 	int[][] DELAYS;
 
+	/**
+	 * NB_NEEDS is the total number of crops, including duplications of the same nned (i.e. the same plant grown on several beds at the same time).
+	 */
 	int NB_NEEDS;
 	int[] NEEDS_SPECIES;
 	int[] NEEDS_BEGIN;
@@ -63,9 +66,16 @@ public class Data {
 	ISet[] NEEDS_FORBIDDEN_BEDS;
 	String[] NEEDS_FAMILY;
 	int[] NEEDS_RETURN_DELAY;
-	List<ISet> GROUPS; // Groups of identical needs (e.g. 5 tomatoes)
-	int[] NEEDS_FIXED_BED; // If specified in the input, some needs can be assigned a fixed bed. If so, the index
-						   // of the bed is specified here, otherwise set to -1.
+
+	/**
+	 * Groups of identical needs (e.g. 5 tomatoes)
+	 */
+	List<ISet> GROUPS;
+	/**
+	 * If specified in the input, some needs can be assigned a fixed bed.
+	 * If so, the index of the bed is specified here, otherwise set to -1.
+	 */
+	int[] NEEDS_FIXED_BED;
 
 	int NB_BEDS;
 	ISet[] ADJACENCY;

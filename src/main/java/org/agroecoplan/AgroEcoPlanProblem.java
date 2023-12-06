@@ -19,6 +19,7 @@ import org.chocosolver.solver.constraints.extension.hybrid.HybridTuples;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static org.chocosolver.solver.constraints.extension.hybrid.HybridTuples.*;
@@ -46,9 +47,21 @@ public class AgroEcoPlanProblem {
 
     private IntVar nbBeds;
 
+    private boolean verbose = false;
+
+    /**
+     * In verbose mode, if not null, détails the 01 criteria calculus
+     */
+    public Function<Solution, String> showO1Details = null;
+
+    /**
+     * In verbose mode, if not null, détails the 02 criteria calculus
+     */public Function<Solution, String> showO2Details = null;
+
     public AgroEcoPlanProblem(Data data, boolean includeForbiddenBeds, boolean verbose) {
         this.data = data;
         this.nbMaxBeds = data.NB_BEDS;
+        this.verbose = verbose;
         if (verbose) {
             showDataSummary();
         }
@@ -135,7 +148,9 @@ public class AgroEcoPlanProblem {
                 domain = IntStream.range(1, nbMaxBeds + 1)
                         .toArray();
             }
-            assignment[i] = model.intVar(domain);
+
+            //assignment[i] = model.intVar(i+"s"+data.SPECIES[data.NEEDS_SPECIES[i]], domain);
+            assignment[i] = model.intVar(i+"s"+data.NEEDS_SPECIES[i], domain);
         }
         // Find maximal cliques
         List<ISet> maximalCliques = ChordalGraphUtils.findMaximalCliques(intervalGraph);
@@ -193,7 +208,7 @@ public class AgroEcoPlanProblem {
                 if (data.INTERACTIONS[data.NEEDS_SPECIES[i]][data.NEEDS_SPECIES[j]] < 0
                         && intervalGraphSets[i].contains(j)
                         && IntervalUtils.minDistance(assignment[i], assignment[j]) <= 1) {
-                    Tuples forbidden = new Tuples(false);
+                    /* Tuples forbidden = new Tuples(false);
                     DisposableValueIterator vit = assignment[i].getValueIterator(true);
                     while (vit.hasNext()) {
                         int a = vit.next();
@@ -201,7 +216,7 @@ public class AgroEcoPlanProblem {
                             forbidden.add(a, b);
                         }
                     }
-                    //model.table(assignment[i], assignment[j], forbidden).post();
+                    model.table(assignment[i], assignment[j], forbidden).post();*/
                     model.distance(assignment[i], assignment[j], ">", 1).post();
                 }
             }
@@ -327,8 +342,8 @@ public class AgroEcoPlanProblem {
                     }
                     // Post smart table constraint
                     HybridTuples tuples = new HybridTuples();
-                    ISupportable[] t = new ISupportable[seq.length]; // a[cropA] != a[cropB]
-                    ISupportable[][] tt = new ISupportable[seq.length - 2][]; // a[cropA] != a[cropB] && one intermediary
+                    ISupportable[] t = new ISupportable[seq.length]; // a[cropA] != a[cropB] i.e. t[0]=* and t[j-i+1]=t[0]
+                    ISupportable[][] tt = new ISupportable[seq.length - 2][]; // a[cropA] != a[cropB] && one intermediary i.e. tt[m][0]=* and tt[m][j-i+1]=tt[m][0]=tt[m][m+1]
                     for (int l = 0; l < tt.length; l++) {
                         tt[l] = new ISupportable[seq.length];
                         tt[l][0] = any();
@@ -357,6 +372,7 @@ public class AgroEcoPlanProblem {
     }
 
     public void initNumberOfPositivePrecedences() throws AgroecoplanException {
+        // NOT USED (problems with smart tables)
         // 1. Construct the sequence of non-overlapping crops.
         //     a. Sort all crops by descending order of crop beginning.
         Integer[] sortedCrops = IntStream.range(0, data.NB_NEEDS).mapToObj(i -> i).toArray(Integer[]::new);
@@ -403,6 +419,7 @@ public class AgroEcoPlanProblem {
             throw new AgroecoplanException("Gain is already defined");
         }
         this.gain = sum;
+
     }
 
     public IntVar initNumberOfPositivePrecedencesCountBased() throws AgroecoplanException {
@@ -437,17 +454,35 @@ public class AgroEcoPlanProblem {
                         BoolVar b1 = model.count(seq[0], intermediate, model.intVar(0)).reify();
                         // Post reified equal
                         BoolVar b2 = model.arithm(seq[0], "=", seq[seq.length - 1]).reify();
-                        boolVars.add(model.and(b1, b2).reify());
+                        if (verbose) {
+                            BoolVar band = model.boolVar(cropA + "prec" + cropB);
+                            model.and(b1, b2).reifyWith(band);
+                            boolVars.add(band);
+                        }
+                        else
+                            boolVars.add(model.and(b1, b2).reify());
                     }
                 }
             }
         }
-        IntVar sum = model.intVar(0, boolVars.size());
-        BoolVar[] boolVarsA = new BoolVar[boolVars.size()];
+        final IntVar sum = model.intVar(0, boolVars.size());
+        final BoolVar[] boolVarsA = new BoolVar[boolVars.size()];
         for (int i = 0; i < boolVarsA.length; i++) {
             boolVarsA[i] = boolVars.get(i);
         }
         model.sum(boolVarsA, "=", sum).post();
+
+
+        if (verbose) {
+            showO2Details = sol -> {
+                StringBuilder txt = new StringBuilder("Number Of Positive Precedences=" + sol.getIntVal(sum) + "   over " + boolVarsA.length + ": ");
+                for (BoolVar integers : boolVarsA) {
+                    if (sol.getIntVal(integers) > 0) txt.append(integers.getName()).append(", ");
+                }
+                return txt.toString();
+            };
+        }
+
         return sum;
 /*        if (gain != null) {
             throw new AgroecoplanException("Gain is already defined");
@@ -467,13 +502,30 @@ public class AgroEcoPlanProblem {
                     allowed.add(a, b);
                 }
             }
-            positive[i] = model.table(assignment[p[0]], assignment[p[1]], allowed).reify();
+            if (verbose) {
+                BoolVar btable = model.boolVar( assignment[p[0]].getName() + "-" + assignment[p[1]].getName() );
+                model.table(assignment[p[0]], assignment[p[1]], allowed).reifyWith(btable);
+                positive[i] = btable;
+            }
+            else
+                positive[i] = model.table(assignment[p[0]], assignment[p[1]], allowed).reify();
         }
-/*        if (gain != null) {
+        /*        if (gain != null) {
             throw new AgroecoplanException("Gain is already defined");
         }*/
         IntVar g = model.intVar(0, positivePairs.size());
         model.sum(positive, "=", g).post();
+
+        if (verbose) {
+            showO1Details = sol -> {
+                StringBuilder txt = new StringBuilder("Number Of Positive Interactions=" + sol.getIntVal(g) + "   over " + positive.length + ": ");
+                for (BoolVar integers : positive) {
+                    if (sol.getIntVal(integers) > 0) txt.append(integers.getName()).append(", ");
+                }
+                return txt.toString();
+            };
+        }
+
         return g;
     }
 

@@ -153,6 +153,9 @@ public class Main implements Runnable {
 
     @Override
     public void run() {
+        if (verbose) {
+            System.out.println("+++VERBOSE mode ");
+        }
         Data data;
 
         String[] constraintList = constraints.split(",");
@@ -177,9 +180,9 @@ public class Main implements Runnable {
         }
 
         if (verbose) {
-            System.out.println("PARALLEL SEARCH ? " + parallel);
+            System.out.println("+++PARALLEL SEARCH ? " + parallel);
             if (parallel) {
-                System.out.println("-> NB CORES = " + nbCores);
+                System.out.println("+++-> NB CORES = " + nbCores);
             }
         }
 
@@ -420,7 +423,14 @@ public class Main implements Runnable {
                     }
                 }
             }
-            System.out.println("Checked pos int = " + checkedPosInt);
+            System.out.println("+++Checked pos int = " + checkedPosInt);
+
+            if (problem.showO1Details!=null) {
+                System.out.println("+++" + problem.showO1Details.apply(sol));
+            }
+            if (problem.showO2Details!=null) {
+                System.out.println("+++" + problem.showO2Details.apply(sol));
+            }
         }
 
         ISet beds = SetFactory.makeConstantSet(Arrays.stream(assignments).mapToInt(v -> sol.getIntVal(v)).toArray());
@@ -437,9 +447,11 @@ public class Main implements Runnable {
                     .toArray();
             String[] row = new String[maxWeek + 1];
             row[0] = "Planche " + i;
+            // fill with empty values
             for (int j = 1; j < maxWeek + 1; j++) {
                 row[j] = "";
             }
+            // replace "" by plant id for the corresponding period
             for (int n : needs) {
                 for (int w = data.NEEDS_BEGIN[n]; w <= data.NEEDS_END[n]; w++) {
                     row[w] = "" + n;
